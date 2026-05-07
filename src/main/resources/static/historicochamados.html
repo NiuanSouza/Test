@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Histórico de Chamados</title>
+    <link rel="stylesheet" href="css/historicochamados.css" />
+  </head>
+
+  <body class="pagina-historico">
+    <div class="top-bar">
+      <div class="left">
+        <button id="btnmenu">
+          <img src="img/menu.png" alt="icone menu" />
+        </button>
+        <span class="titulo" id="boas-vindas-titulo">Bem vindo!</span>
+      </div>
+
+      <div class="logout">
+        <button id="btnlogout" onclick="btnlogout()">
+          <img src="img/logout.png" alt="icone logout" />
+        </button>
+      </div>
+    </div>
+
+    <section class="historico-dashboard">
+      <div class="historico-dashboard-topo">
+        <div>
+          <h1>Painel completo de chamados</h1>
+          <p>
+            Acompanhe os atendimentos finalizados e em andamento com dados de
+            prazo, viatura, responsável, prioridade e observações.
+          </p>
+        </div>
+      </div>
+
+      <div class="historico-kpis">
+        <article class="historico-kpi">
+          <span>Total no período</span>
+          <strong>38</strong>
+          <small>Chamados registrados em abril</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Finalizados</span>
+          <strong>29</strong>
+          <small>76% concluídos dentro do prazo</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Em andamento</span>
+          <strong>6</strong>
+          <small>3 com prioridade alta</small>
+        </article>
+        <article class="historico-kpi">
+          <span>Tempo médio</span>
+          <strong>2h18</strong>
+          <small>Da abertura ao encerramento</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="painel-historico">
+      <div class="painel-historico-topo">
+        <div>
+          <h2>Histórico de chamados realizados</h2>
+        </div>
+
+        <div class="filtros-historico">
+          <span class="filtro-chip filtro-ativo">Período: abril/2026</span>
+          <span class="filtro-chip">Base: todas</span>
+          <span class="filtro-chip">Prioridade: todas</span>
+        </div>
+      </div>
+
+      <div class="historico-busca-panel">
+        <span class="historico-busca-label"
+          >Buscar técnico por nome, matrícula ou e-mail</span
+        >
+        <div class="historico-busca-input">
+          <input
+            id="filtroBusca"
+            type="text"
+            placeholder="Digite nome ou matrícula"
+            oninput="aplicarFiltrosHistorico()"
+          />
+        </div>
+      </div>
+
+      <div class="historico-lista" id="historicoLista"></div>
+    </section>
+
+    <div id="popupChamadoDetalhes" class="sobreposicao">
+      <div class="popup-card">
+        <button class="popup-close" onclick="fecharPopupChamadoDetalhes()">
+          ×
+        </button>
+        <h2 class="popup-titulo" id="popupDetalhesTitulo">
+          Detalhes do chamado
+        </h2>
+        <div class="popup-conteudo" id="popupDetalhesConteudo"></div>
+        <button
+          type="button"
+          class="btn-acao-filtrar"
+          onclick="fecharPopupChamadoDetalhes()"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+
+    <div id="overlayBlurSidebar" class="overlay-blur-sidebar"></div>
+
+    <div id="sidebar" class="sidebar">
+      <button id="btnx" class="close-btn">×</button>
+      <a href="telainicial-gestor.html">TELA INICIAL</a>
+      <a href="relatorios.html">RELATÓRIOS</a>
+      <a href="tecnicos-gestor.html">TÉCNICOS</a>
+      <a href="cadastrousuarios.html">CADASTRO DE USUÁRIOS</a>
+      <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+      <a href="#">DÚVIDAS</a>
+      <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+    </div>
+
+    <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
+    <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+
+    <script src="js/basic.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/historico.js"></script>
+  </body>
+</html>

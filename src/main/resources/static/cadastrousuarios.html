@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Usuários</title>
+    <link rel="stylesheet" href="css/cadusuarios.css" />
+  </head>
+
+  <body class="pagina-chamados">
+    <div class="top-bar">
+      <div class="left">
+        <button id="btnmenu">
+          <img src="img/menu.png" alt="icone menu" />
+        </button>
+        <span class="titulo" id="boas-vindas-titulo">Bem vindo!</span>
+      </div>
+      <div class="logout">
+        <button id="btnlogout" onclick="btnlogout()">
+          <img src="img/logout.png" alt="icone logout" />
+        </button>
+      </div>
+    </div>
+
+    <div id="overlayBlurSidebar" class="overlay-blur-sidebar"></div>
+
+    <div id="sidebar" class="sidebar">
+      <button id="btnx" class="close-btn">×</button>
+      <a href="telainicial-gestor.html">TELA INICIAL</a>
+      <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
+      <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+      <a href="duvidas.html">DÚVIDAS</a>
+      <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+      <a href="relatorios.html">RELATÓRIOS </a>
+      <a href="tecnicos-gestor.html">TÉCNICOS</a>
+    </div>
+
+    <div class="chamado-card">
+      <h2 class="chamado-titulo">CADASTRO DE USUÁRIOS:</h2>
+      <div class="chamado-conteudo">
+        <div class="coluna">
+          <div class="group">
+            <input id="usuario-nome" required type="text" class="input" />
+            <label>Nome:</label>
+          </div>
+
+          <div class="group">
+            <input id="usuario-email" required type="email" class="input" />
+            <label>E-mail:</label>
+          </div>
+
+          <div class="group">
+            <input id="usuario-tel" required type="tel" class="input" />
+            <label>Telefone:</label>
+          </div>
+
+          <div class="group">
+            <input id="usuario-matricula" required type="text" class="input" />
+            <label>Matrícula:</label>
+          </div>
+
+          <div class="group">
+            <select
+              id="usuario-sexo"
+              required
+              class="input"
+              value=""
+              onchange="this.setAttribute('value', this.value)"
+            >
+              <option value=""></option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+              <option value="O">Outro</option>
+            </select>
+            <label>Sexo:</label>
+          </div>
+        </div>
+
+        <div class="coluna">
+          <div class="group">
+            <select
+              id="usuario-funcao"
+              required
+              class="input"
+              value=""
+              onchange="this.setAttribute('value', this.value)"
+            >
+              <option value=""></option>
+              <option value="tecnico">Técnico</option>
+              <option value="gestor">Gestor</option>
+              <option value="ambas">Ambas</option>
+            </select>
+            <label>Função:</label>
+          </div>
+
+          <div class="group">
+            <input id="usuario-nasc" required type="date" class="input" />
+            <label>Data de Nascimento:</label>
+          </div>
+
+          <div class="group">
+            <input id="usuario-senha" required type="password" class="input" />
+            <label>Senha:</label>
+          </div>
+
+          <div class="group-cnh">
+            <p class="label-cnh">Categorias da CNH:</p>
+            <div class="opcoes-cnh">
+              <div class="check-container">
+                <input type="checkbox" name="cnh" value="A" />
+                <span class="checkmark"></span>
+                <span class="label-text">A</span>
+              </div>
+
+              <div class="check-container">
+                <input type="checkbox" name="cnh" value="B" />
+                <span class="checkmark"></span>
+                <span class="label-text">B</span>
+              </div>
+
+              <div class="check-container">
+                <input type="checkbox" name="cnh" value="C" />
+                <span class="checkmark"></span>
+                <span class="label-text">C</span>
+              </div>
+
+              <div class="check-container">
+                <input type="checkbox" name="cnh" value="D" />
+                <span class="checkmark"></span>
+                <span class="label-text">D</span>
+              </div>
+
+              <div class="check-container">
+                <input type="checkbox" name="cnh" value="E" />
+                <span class="checkmark"></span>
+                <span class="label-text">E</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-aceitar" id="btncadastrar">Cadastrar</button>
+    </div>
+
+    <div id="popupConfirmacao" class="popup" style="display: none">
+      <div class="popup-content">
+        <h2>Confirmar?</h2>
+        <p>Você deseja realmente salvar as informações de cadastro?</p>
+        <div class="popup-buttons">
+          <button id="btn-cancelar-confirmacao" class="btn-voltar">
+            Voltar
+          </button>
+          <button id="btn-confirmar-final" class="btn-aceitar">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="popupSucesso" class="popup" style="display: none">
+      <div class="popup-content">
+        <h2>Sucesso!</h2>
+        <p>Usuário cadastrado com sucesso.</p>
+        <div class="popup-buttons">
+          <button id="btn-fechar-sucesso" class="btn-aceitar">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
+    <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+
+    <script src="js/basic.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user.js"></script>
+  </body>
+</html>

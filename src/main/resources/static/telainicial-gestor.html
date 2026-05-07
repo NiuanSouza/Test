@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIVA - Home</title>
+    <link rel="stylesheet" href="css/telainicial-gestor.css">
+</head>
+
+<body class="pagina-telainicial">
+
+    <!-- ADICIONAR O BACKEND PARA RECEBER OS DADOS DO USUARIO -->
+    <div class="top-bar">
+        <div class="left">
+            <button id="btnmenu">
+                <img src="img/menu.png" alt="icone menu">
+            </button>
+            <span class="titulo" id="boas-vindas-titulo">Bem vindo!</span>
+        </div>
+
+        <div class="logout">
+            <button id="btnlogout" onclick="btnlogout()">
+                <img src="img/logout.png" alt="icone logout">
+            </button>
+        </div>
+    </div>
+
+    <!-- ADICIONAR O BACKEND PARA RECEBER OS DADOS DOS CHAMADOS -->
+    <section class="dashboard-gestor">
+        <div class="dashboard-topo">
+            <div>
+                <h2>Dashboard da frota e equipe</h2>
+                <p>Painel inicial com os principais indicadores de viaturas, técnicos e abastecimento.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="dashboard-card destaque-disponivel">
+                <span class="dashboard-label">Viaturas disponíveis</span>
+                <strong class="dashboard-valor" id="val-disponiveis">...</strong>
+                <span class="dashboard-info">Prontas para atendimento imediato</span>
+            </article>
+            <article class="dashboard-card destaque-manutencao">
+                <span class="dashboard-label">Viaturas em manutenção</span>
+                <strong class="dashboard-valor" id="val-manutencao">...</strong>
+                <span class="dashboard-info">Em oficina ou revisao preventiva</span>
+            </article>
+            <article class="dashboard-card destaque-uso">
+                <span class="dashboard-label">Viaturas em uso</span>
+                <strong class="dashboard-valor" id="val-uso">...</strong>
+                <span class="dashboard-info">Em rondas e operacoes ativas</span>
+            </article>
+            <article class="dashboard-card destaque-tecnicos">
+                <span class="dashboard-label">Técnicos disponíveis</span>
+                <strong class="dashboard-valor" id="val-tecnicos-disp">...</strong>
+                <span class="dashboard-info">Aguardando nova alocação</span>
+            </article>
+            <article class="dashboard-card destaque-servico">
+                <span class="dashboard-label">Técnicos em serviço</span>
+                <strong class="dashboard-valor" id="val-tecnicos-serv">...</strong>
+                <span class="dashboard-info">Atendendo chamados neste momento</span>
+            </article>
+            <article class="dashboard-card destaque-combustivel">
+                <span class="dashboard-label">Gasto de combustível mensal</span>
+                <strong class="dashboard-valor" id="val-gasto-mensal">...</strong>
+                <span class="dashboard-info">Total registrado no mes atual</span>
+            </article>
+            <article class="dashboard-card destaque-preco">
+                <span class="dashboard-label">Preço médio por litro</span>
+                <strong class="dashboard-valor" id="val-preco-litro">...</strong>
+                <span class="dashboard-info">Media consolidada dos abastecimentos</span>
+            </article>
+            <article class="dashboard-card destaque-litros">
+                <span class="dashboard-label">Total de litros abastecidos</span>
+                <strong class="dashboard-valor" id="val-litros">...</strong>
+                <span class="dashboard-info">Volume acumulado no mes</span>
+            </article>
+        </div>
+        </div>
+    </section>
+
+    <section class="card-historico">
+      <div class="card-historico-topo">
+        <div>
+          <h2>Histórico de chamados</h2>
+          <p>
+            Últimos atendimentos com prioridade, status, responsável e prazo.
+          </p>
+        </div>
+        <div class="historico-resumo">
+          <article class="historico-resumo-card">
+            <span>Chamados ativos</span>
+            <strong id="resumo-ativos">...</strong>
+          </article>
+          <article class="historico-resumo-card">
+            <span>Concluídos hoje</span>
+            <strong id="resumo-concluidos">...</strong>
+          </article>
+        </div>
+      </div>
+
+      <div class="lista-chamados" id="chamados-recentes-lista">
+        <div class="nenhum-registro">Buscando auditoria do sistema...</div>
+      </div>
+
+      <button
+        class="btn-historico-completo"
+        onclick="window.location.href = 'historicochamados.html'"
+      >
+        Visualizar histórico completo
+      </button>
+    </section>
+
+
+    <!-- BLUR DA SIDEBAR -->
+    <div id="overlayBlurSidebar" class="overlay-blur-sidebar"></div>
+
+    <div id="sidebar" class="sidebar">
+        <button id="btnx" class="close-btn">×</button>
+        <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
+        <a href="relatorios.html">RELATÓRIOS</a>
+        <a href="tecnicos-gestor.html">TÉCNICOS</a>
+        <a href="cadastrousuarios.html">CADASTRO DE USUÁRIOS</a>
+        <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+        <a href="duvidas.html">DÚVIDAS</a>
+        <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+    </div>
+
+    <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
+    <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+    </div>
+
+    <script src="js/basic.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/historico.js"></script>
+  </body>
+</html>

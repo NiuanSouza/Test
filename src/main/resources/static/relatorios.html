@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Relatórios</title>
+    <link rel="stylesheet" href="css/relatorios.css" />
+  </head>
+
+  <body class="pagina-relatorios">
+    <div class="top-bar">
+      <div class="left">
+        <button id="btnmenu">
+          <img src="img/menu.png" alt="icone menu" />
+        </button>
+        <span class="titulo" id="boas-vindas-titulo">Bem vindo!</span>
+      </div>
+
+      <div class="logout">
+        <button id="btnlogout" onclick="btnlogout()">
+          <img src="img/logout.png" alt="icone logout" />
+        </button>
+      </div>
+    </div>
+
+    <main class="relatorios-container">
+      <section class="relatorios-dashboard">
+        <div class="relatorios-dashboard-topo">
+          <div>
+            <h1>Relatórios por mês</h1>
+            <p>
+              Visão de chamados organizada por mês e status do período atual.
+            </p>
+          </div>
+        </div>
+
+        <div class="relatorios-kpis">
+          <article class="relatorios-kpi">
+            <span>Status atual</span>
+            <strong>O mês de abril ainda não foi fechado</strong>
+            <small>Relatório parcial disponível para exportação.</small>
+          </article>
+          <article class="relatorios-kpi">
+            <span>Chamados no mês</span>
+            <strong>42</strong>
+            <small>Chamados registrados neste período.</small>
+          </article>
+          <article class="relatorios-kpi">
+            <span>Concluídos</span>
+            <strong>28</strong>
+            <small>Atendimentos finalizados com sucesso.</small>
+          </article>
+          <article class="relatorios-kpi">
+            <span>Em aberto</span>
+            <strong>14</strong>
+            <small>Chamados em andamento para fechamento.</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="relatorios-panel">
+        <div class="relatorios-panel-topo">
+          <div>
+            <h2>Períodos de relatório</h2>
+            <p>Selecione o mês para ver o status e o conteúdo do relatório.</p>
+          </div>
+          <button class="btn-gerar" type="button">
+            Gerar relatório parcial
+          </button>
+        </div>
+
+        <div id="months-list" class="relatorios-periodos">
+          <button class="periodo active">Abril 2026</button>
+          <button class="periodo">Março 2026</button>
+          <button class="periodo">Fevereiro 2026</button>
+          <button class="periodo">Janeiro 2026</button>
+        </div>
+
+        <div class="relatorios-table-wrapper">
+          <table class="relatorios-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Veículo</th>
+                <th>Técnico</th>
+                <th>Descrição</th>
+                <th>Saída</th>
+                <th>Conclusão</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>7345</td>
+                <td>Ford Ka | 1234</td>
+                <td>Ana Paula</td>
+                <td>Verificação de bomba de combustível</td>
+                <td>20/04/2026 08:10</td>
+                <td>20/04/2026 10:00</td>
+                <td><span class="status-chip status-indicar">Aberto</span></td>
+              </tr>
+              <tr>
+                <td>7343</td>
+                <td>Fiat Mobi | 9012</td>
+                <td>Bruno Lima</td>
+                <td>Manutenção preventiva de radar</td>
+                <td>17/04/2026 15:05</td>
+                <td>17/04/2026 16:40</td>
+                <td>
+                  <span class="status-chip status-finalizado">Finalizado</span>
+                </td>
+              </tr>
+              <tr>
+                <td>7341</td>
+                <td>Toyota Hilux | 7890</td>
+                <td>Juliana Costa</td>
+                <td>Verificação de cronotacógrafos</td>
+                <td>20/04/2026 07:40</td>
+                <td>--</td>
+                <td>
+                  <span class="status-chip status-andamento">Em andamento</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div id="overlayBlurSidebar" class="overlay-blur-sidebar"></div>
+    <div id="sidebar" class="sidebar">
+      <button id="btnx" class="close-btn">×</button>
+      <a href="telainicial-gestor.html">TELA INICIAL</a>
+      <a href="historicochamados.html">HISTÓRICO DE CHAMADOS</a>
+      <a href="relatorios.html" class="active">RELATÓRIOS</a>
+      <a href="cadastrousuarios.html">CADASTRO DE USUÁRIOS</a>
+      <a href="cadastroveiculos.html">CADASTRO DE VEÍCULOS</a>
+      <a href="configuracoes-gestor.html">CONFIGURAÇÕES</a>
+    </div>
+
+    <div id="toast-aviso" class="toast-hidden">Preencha todos os campos!</div>
+    <div id="toast-aviso1" class="toast-hidden1">Preencha todos os campos!</div>
+
+    <script src="js/basic.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>
