@@ -1,40 +1,56 @@
+/**
+ * js/tecnicos.js
+ * Responsável por: Listagem, filtro e edição de Técnicos (Tela do Gestor).
+ */
+
+// ===================================================================
+// 1. ESTADO GLOBAL E DICIONÁRIOS
+// ===================================================================
 let tecnicosAtuais = [];
 let tecnicoEditandoMatricula = null;
 
-const traducaoStatus = {
-    "AVAILABLE": "Ativo",
-    "ON_DUTY": "Em Serviço",
-    "DISMISSED": "Inativo"
-};
-
-const traducaoPerfil = {
-    "TECHNICIAN": "Técnico",
-    "ADMINISTRATOR": "Gestor"
-};
-
-function traduzirParaBackend(statusUI) {
-    switch (statusUI) {
-        case "Ativo":
-        case "AVAILABLE":
-            return "AVAILABLE";
-        case "Em Serviço":
-        case "ON_DUTY":
-            return "ON_DUTY";
-        case "Inativo":
-        case "Suspenso":
-        case "DISMISSED":
-            return "DISMISSED";
-        default:
-            return "AVAILABLE";
+const TRANSLATION = {
+    STATUS: {
+        "AVAILABLE": "Ativo",
+        "ON_DUTY": "Em Serviço",
+        "DISMISSED": "Inativo"
+    },
+    PERFIL: {
+        "TECHNICIAN": "Técnico",
+        "ADMINISTRATOR": "Gestor"
     }
+};
+
+// Converte a label da interface de volta para o ENUM exigido pelo backend
+function getBackendStatus(statusUI) {
+    const mapaInverso = {
+        "Ativo": "AVAILABLE",
+        "Em Serviço": "ON_DUTY",
+        "Inativo": "DISMISSED",
+        "Suspenso": "DISMISSED"
+    };
+    return mapaInverso[statusUI] || "AVAILABLE";
 }
 
+// ===================================================================
+// 2. BUSCA E RENDERIZAÇÃO DA TABELA
+// ===================================================================
 async function buscarTecnicosDaAPI() {
+    const corpoTabela = document.getElementById("tecnicosTabelaCorpo");
+    if (corpoTabela) {
+        corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">Carregando técnicos...</td></tr>`;
+    }
+
     try {
         const response = await apiFetch("/user/technicians", { method: "GET" });
 
-        if (response && response.ok) {
+        // Se response for null, a sessão expirou e o basic.js já lidou com isso
+        if (!response) return;
+
+        if (response.ok) {
             const data = await response.json();
+
+            // Mapeia e sanitiza os dados que chegam da API
             tecnicosAtuais = data.map(u => ({
                 registration: u.registration,
                 name: u.name,
@@ -44,12 +60,17 @@ async function buscarTecnicosDaAPI() {
                 perfil: u.permission || "TECHNICIAN",
                 status: u.employeeStatus || "AVAILABLE"
             }));
+
             renderizarTecnicos(tecnicosAtuais);
         } else {
-            console.error("Erro ao buscar técnicos. Status:", response?.status);
+            const errorMsg = await response.text();
+            if (corpoTabela) corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Erro ao carregar técnicos.</td></tr>`;
+            console.error("Erro na busca de técnicos:", errorMsg);
         }
     } catch (error) {
         console.error("Erro de conexão ao carregar técnicos:", error);
+        window.mostrarToast("Falha de comunicação com o servidor.");
+        if (corpoTabela) corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Sem conexão com o servidor.</td></tr>`;
     }
 }
 
@@ -63,8 +84,8 @@ function renderizarTecnicos(lista) {
     }
 
     corpo.innerHTML = lista.map(tecnico => {
-        const statusPT = traducaoStatus[tecnico.status] || "Ativo";
-        const perfilPT = traducaoPerfil[tecnico.perfil] || "Técnico";
+        const statusPT = TRANSLATION.STATUS[tecnico.status] || "Ativo";
+        const perfilPT = TRANSLATION.PERFIL[tecnico.perfil] || "Técnico";
 
         return `
             <tr>
@@ -84,21 +105,29 @@ function renderizarTecnicos(lista) {
     }).join("");
 }
 
+// ===================================================================
+// 3. EDIÇÃO DE TÉCNICOS (UI e Integração)
+// ===================================================================
 window.abrirEditarTecnico = function (matricula) {
     tecnicoEditandoMatricula = matricula;
     const tecnico = tecnicosAtuais.find(t => t.registration === matricula);
+
     if (!tecnico) return;
 
-    document.getElementById("editarNome").value = tecnico.name;
-    document.getElementById("editarEmail").value = tecnico.email;
-    document.getElementById("editarMatricula").value = tecnico.registration;
-    document.getElementById("editarTelefone").value = tecnico.phone !== "Não informado" ? tecnico.phone : "";
+    // Função auxiliar segura: só preenche o valor se o campo existir na tela
+    const preencherCampo = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.value = valor;
+    };
 
-    if (document.getElementById("editarSetor")) document.getElementById("editarSetor").value = tecnico.setor;
+    preencherCampo("editarNome", tecnico.name);
+    preencherCampo("editarEmail", tecnico.email);
+    preencherCampo("editarMatricula", tecnico.registration);
+    preencherCampo("editarTelefone", tecnico.phone !== "Não informado" ? tecnico.phone : "");
+    preencherCampo("editarSetor", tecnico.setor);
 
-    const statusAtualUI = traducaoStatus[tecnico.status] || "Ativo";
-    const selectStatus = document.getElementById("editarStatus");
-    if (selectStatus) selectStatus.value = statusAtualUI;
+    const statusAtualUI = TRANSLATION.STATUS[tecnico.status] || "Ativo";
+    preencherCampo("editarStatus", statusAtualUI);
 
     const popup = document.getElementById("popupEditarTecnico");
     if (popup) popup.style.display = "flex";
@@ -107,23 +136,24 @@ window.abrirEditarTecnico = function (matricula) {
 window.fecharPopupEditarTecnico = function () {
     const popup = document.getElementById("popupEditarTecnico");
     if (popup) popup.style.display = "none";
+    tecnicoEditandoMatricula = null; // Limpa a referência
 };
 
 window.salvarAlteracoesTecnico = async function () {
-    const nome = document.getElementById("editarNome").value.trim();
-    const email = document.getElementById("editarEmail").value.trim();
-    const statusSelecionadoUI = document.getElementById("editarStatus").value;
+    const nome = document.getElementById("editarNome")?.value.trim();
+    const email = document.getElementById("editarEmail")?.value.trim();
+    const statusSelecionadoUI = document.getElementById("editarStatus")?.value;
 
     if (!nome || !email) {
-        mostrarToast("Nome e E-mail são campos obrigatórios.");
+        window.mostrarToast("Nome e E-mail são campos obrigatórios.");
         return;
     }
 
     const payload = {
         name: nome,
         email: email,
-        phone: document.getElementById("editarTelefone").value.trim(),
-        employeeStatus: traduzirParaBackend(statusSelecionadoUI)
+        phone: document.getElementById("editarTelefone")?.value.trim() || null,
+        employeeStatus: getBackendStatus(statusSelecionadoUI)
     };
 
     try {
@@ -133,21 +163,32 @@ window.salvarAlteracoesTecnico = async function () {
         });
 
         if (response && response.ok) {
-            mostrarToast("Técnico atualizado com sucesso!");
-            fecharPopupEditarTecnico();
-            buscarTecnicosDaAPI();
-        } else {
-            const errorData = await response.json();
-            mostrarToast("Erro ao salvar: " + (errorData.error || "Erro desconhecido"));
+            // O toast1 é o toast verde (sucesso) no seu CSS
+            window.mostrarToast("Técnico atualizado com sucesso!", "toast-aviso1");
+            window.fecharPopupEditarTecnico();
+            buscarTecnicosDaAPI(); // Atualiza a tabela imediatamente
+        } else if (response) {
+            // Extrai o erro de forma segura
+            const errorData = await response.json().catch(() => ({}));
+            const mensagem = errorData.error || errorData.message || "Verifique os dados informados.";
+            window.mostrarToast("Erro ao salvar: " + mensagem);
         }
     } catch (error) {
         console.error("Erro na requisição de atualização:", error);
-        mostrarToast("Erro de conexão com o servidor.");
+        window.mostrarToast("Erro de conexão com o servidor.");
     }
 };
 
+// ===================================================================
+// 4. SISTEMA DE FILTROS LOCAIS (Search Bar)
+// ===================================================================
 window.aplicarFiltroTecnicos = function () {
     const termo = document.getElementById("filtroBuscaTecnico")?.value.trim().toLowerCase() || "";
+
+    if (!termo) {
+        renderizarTecnicos(tecnicosAtuais);
+        return;
+    }
 
     const filtrados = tecnicosAtuais.filter(t => {
         return [t.name, t.registration, t.email, t.setor].some(campo =>
@@ -164,23 +205,20 @@ window.limparFiltroTecnicos = function () {
     renderizarTecnicos(tecnicosAtuais);
 };
 
-function mostrarToast(mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    } else {
-        alert(mensagem);
-    }
-}
-
+// ===================================================================
+// 5. INICIALIZAÇÃO
+// ===================================================================
 document.addEventListener("DOMContentLoaded", () => {
+    // Valida se a página atual contém a tabela antes de chamar a API
     if (document.getElementById("tecnicosTabelaCorpo")) {
         buscarTecnicosDaAPI();
+
+        // Adiciona evento de tecla "Enter" no campo de busca, caso ele exista
+        const campoBusca = document.getElementById("filtroBuscaTecnico");
+        if (campoBusca) {
+            campoBusca.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") window.aplicarFiltroTecnicos();
+            });
+        }
     }
 });

@@ -1,26 +1,24 @@
+/**
+ * js/historico.js
+ */
 let chamadosHistorico = [];
 
-function exibirErroNaTela(mensagem, detalhes = "") {
-    const htmlErro = `
-        <div style="background-color: #ffebee; border: 1px solid #f44336; color: #b71c1c; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left; width: 100%;">
-            <h3 style="margin-top: 0;">❌ Erro na API (Auditoria)</h3>
-            <p><strong>Mensagem:</strong> ${mensagem}</p>
-            ${detalhes ? `<p style="font-size: 13px; background: #fff; padding: 10px; border: 1px solid #ffcdd2; color: #333; font-family: monospace;">${detalhes}</p>` : ""}
-        </div>
-    `;
-    const containerHistorico = document.getElementById("historicoLista");
-    if (containerHistorico) containerHistorico.innerHTML = htmlErro;
-}
-
 async function inicializarHistorico() {
-    try {
-        const response = await apiFetch("/service/history");
+    const container = document.getElementById("historicoLista");
+    if (!container) return;
 
+    container.innerHTML = '<p style="text-align:center; padding: 20px;">Carregando histórico de auditoria...</p>';
+
+    try {
+        const response = await apiFetch("/dashboard/history");
+
+        // Se response for null, a sessão caiu e o basic.js já redirecionou
         if (!response) return;
 
         if (!response.ok) {
             const erroTexto = await response.text();
-            exibirErroNaTela(`Status HTTP: ${response.status} (${response.statusText})`, erroTexto);
+            // Usa o exibirErro global do basic.js passando o seletor da div
+            window.exibirErro(`Status HTTP: ${response.status} (${response.statusText})`, erroTexto, "#historicoLista");
             return;
         }
 
@@ -33,8 +31,8 @@ async function inicializarHistorico() {
             const statusStr = isFinalizado ? "finalizado" : "andamento";
             const statusLabelStr = isFinalizado ? "Finalizado" : "Em andamento";
 
-            const rawDate = rev.revisionDate || rev.entity.departureTime || new Date();
-            const dataAbertura = new Date(rawDate);
+            // CORREÇÃO: Agora o backend envia a data oficial da auditoria (revisionDate)
+            const dataAbertura = new Date(rev.revisionDate || rev.entity.departureTime || new Date());
 
             const dia = String(dataAbertura.getDate()).padStart(2, '0');
             const mes = String(dataAbertura.getMonth() + 1).padStart(2, '0');
@@ -48,11 +46,8 @@ async function inicializarHistorico() {
             if (rawPriority === "HIGH") {
                 prioLabel = "Alta";
                 prioClass = "prioridade-alta";
-            } else if (rawPriority === "LOW") {
-                prioLabel = "Baixa";
-                prioClass = "prioridade-baixa";
-            } else if (rawPriority === "SCHEDULED") {
-                prioLabel = "Agendado";
+            } else if (rawPriority === "LOW" || rawPriority === "SCHEDULED") {
+                prioLabel = rawPriority === "LOW" ? "Baixa" : "Agendado";
                 prioClass = "prioridade-baixa";
             }
 
@@ -79,14 +74,13 @@ async function inicializarHistorico() {
                 observacao: rev.entity.description || "Sem observações.",
                 execucao: isFinalizado ? formatarData(rev.entity.completionTime) : "",
             };
-        }).filter(item => item !== null); // Remove os que falharam no !rev.entity
+        }).filter(item => item !== null);
 
-        if (document.getElementById("historicoLista")) {
-            renderizarChamados(chamadosHistorico);
-            atualizarKpisHistorico(chamadosHistorico);
-        }
+        renderizarChamados(chamadosHistorico);
+        atualizarKpisHistorico(chamadosHistorico);
+
     } catch (error) {
-        exibirErroNaTela("Erro no JavaScript", error.message);
+        window.exibirErro("Erro de Comunicação JavaScript", error.message, "#historicoLista");
     }
 }
 
@@ -111,7 +105,7 @@ function renderizarChamados(lista) {
     if (!container) return;
 
     if (!lista || lista.length === 0) {
-        container.innerHTML = `<div class="nenhum-registro">Nenhuma auditoria encontrada.</div>`;
+        container.innerHTML = `<div class="nenhum-registro" style="text-align: center; padding: 30px;">Nenhuma auditoria encontrada no momento.</div>`;
         return;
     }
 
@@ -157,7 +151,8 @@ window.aplicarFiltrosHistorico = function () {
         if (!busca) return true;
         return (c.matricula || "").toLowerCase().includes(busca) ||
             (c.tecnico || "").toLowerCase().includes(busca) ||
-            (c.prefixo || "").toLowerCase().includes(busca);
+            (c.prefixo || "").toLowerCase().includes(busca) ||
+            (c.title || "").toLowerCase().includes(busca);
     });
 
     renderizarChamados(filtrados);
@@ -170,17 +165,18 @@ window.abrirDetalhesChamado = function (id) {
     document.getElementById("popupDetalhesTitulo").textContent = `${chamado.title} • ${chamado.statusLabel}`;
     document.getElementById("popupDetalhesConteudo").innerHTML = `
         <div class="popup-grid">
+            ${montarDetalhe("Tipo Aud.", chamado.tipoRegistro)}
             ${montarDetalhe("Técnico", chamado.tecnico)}
             ${montarDetalhe("Matrícula", chamado.matricula)}
-            ${montarDetalhe("Data de Registro", chamado.abertura)}
+            ${montarDetalhe("Data (Audit)", chamado.abertura)}
             ${montarDetalhe("Local/Destino", chamado.local)}
             ${montarDetalhe("Prioridade", chamado.priorityLabel)}
             ${montarDetalhe("Situação Atual", chamado.statusLabel)}
             ${chamado.status === "finalizado" ? montarDetalhe("Data de Conclusão", chamado.execucao) : ""}
         </div>
-        <div class="popup-obs">
-            <strong>Observação registrada no chamado:</strong>
-            <p>${chamado.observacao}</p>
+        <div class="popup-obs" style="margin-top: 15px;">
+            <strong>Observação registrada:</strong>
+            <p style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 5px;">${chamado.observacao}</p>
         </div>
     `;
     document.getElementById("popupChamadoDetalhes").style.display = "flex";
@@ -190,8 +186,16 @@ window.fecharPopupChamadoDetalhes = function () {
     document.getElementById("popupChamadoDetalhes").style.display = "none";
 };
 
+// Vincula o Enter no input de busca para rodar o filtro
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("historicoLista")) {
         inicializarHistorico();
+
+        const busca = document.getElementById("filtroBusca");
+        if (busca) {
+            busca.addEventListener("keyup", (e) => {
+                if(e.key === "Enter") window.aplicarFiltrosHistorico();
+            });
+        }
     }
 });

@@ -3,7 +3,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS incidents_aud;
 DROP TABLE IF EXISTS refuelings_aud;
 DROP TABLE IF EXISTS records_aud;
-DROP TABLE IF EXISTS attendance_aud;
+DROP TABLE IF EXISTS service_aud;
 DROP TABLE IF EXISTS cars_aud;
 DROP TABLE IF EXISTS users_aud;
 DROP TABLE IF EXISTS car_type_aud;
@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS revinfo;
 DROP TABLE IF EXISTS incidents;
 DROP TABLE IF EXISTS refuelings;
 DROP TABLE IF EXISTS records;
-DROP TABLE IF EXISTS attendance;
+DROP TABLE IF EXISTS service;
 DROP TABLE IF EXISTS cars;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS car_type;
@@ -48,6 +48,7 @@ CREATE TABLE users (
     driver_license_category VARCHAR(5),
     driver_license_expiration DATE,
     employee_status ENUM('AVAILABLE', 'ON_DUTY', 'DISMISSED') DEFAULT 'AVAILABLE',
+    image_url TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -70,6 +71,7 @@ CREATE TABLE cars (
     required_license VARCHAR(20),
     vehicle_status ENUM('AVAILABLE', 'IN_USE', 'MAINTENANCE', 'UNAVAILABLE') DEFAULT 'AVAILABLE',
     observations TEXT,
+    image_url TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -78,7 +80,7 @@ CREATE TABLE cars (
     CONSTRAINT fk_car_type FOREIGN KEY (type_id) REFERENCES car_type(id)
 );
 
-CREATE TABLE attendance (
+CREATE TABLE service (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     car_prefix VARCHAR(20),
     user_registration VARCHAR(50),
@@ -112,7 +114,7 @@ CREATE TABLE records (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(100) DEFAULT 'SYSTEM',
     updated_by VARCHAR(100) DEFAULT 'SYSTEM',
-    CONSTRAINT fk_record_service FOREIGN KEY (service_id) REFERENCES attendance(id)
+    CONSTRAINT fk_record_service FOREIGN KEY (service_id) REFERENCES service(id)
 );
 
 CREATE TABLE refuelings (
@@ -146,7 +148,7 @@ CREATE TABLE incidents (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(100) DEFAULT 'SYSTEM',
     updated_by VARCHAR(100) DEFAULT 'SYSTEM',
-    CONSTRAINT fk_incident_service FOREIGN KEY (service_id) REFERENCES attendance(id)
+    CONSTRAINT fk_incident_service FOREIGN KEY (service_id) REFERENCES service(id)
 );
 
 -- =========================================================================
@@ -186,7 +188,7 @@ CREATE TABLE cars_aud (
     CONSTRAINT fk_cars_aud_rev FOREIGN KEY (rev) REFERENCES revinfo(rev)
 );
 
-CREATE TABLE attendance_aud (
+CREATE TABLE service_aud (
     id BIGINT, rev INT, revtype TINYINT,
     car_prefix VARCHAR(20), user_registration VARCHAR(50),
     departure_time DATETIME, arrival_time DATETIME, completion_time DATETIME, expected_completion_time DATETIME,
@@ -194,7 +196,7 @@ CREATE TABLE attendance_aud (
     destination_requester VARCHAR(255), description TEXT, priority VARCHAR(20), is_active BOOLEAN,
     created_at DATETIME, updated_at DATETIME, created_by VARCHAR(100), updated_by VARCHAR(100),
     PRIMARY KEY (id, rev),
-    CONSTRAINT fk_attendance_aud_rev FOREIGN KEY (rev) REFERENCES revinfo(rev)
+    CONSTRAINT fk_service_aud_rev FOREIGN KEY (rev) REFERENCES revinfo(rev)
 );
 
 CREATE TABLE records_aud (

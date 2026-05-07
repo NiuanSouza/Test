@@ -1,4 +1,11 @@
-// Função principal de cadastro integrada com a API
+/**
+ * js/user.js (ou cadusuarios.js)
+ * Responsável por: Cadastro de novos usuários (Técnicos) no sistema.
+ */
+
+// ===================================================================
+// 1. INTEGRAÇÃO COM A API: CADASTRAR USUÁRIO
+// ===================================================================
 window.cadastrarUsuario = async function () {
     const nameInput = document.getElementById("cadNome")?.value;
     const emailInput = document.getElementById("cadEmail")?.value;
@@ -6,17 +13,17 @@ window.cadastrarUsuario = async function () {
     const passwordInput = document.getElementById("cadSenha")?.value;
 
     if (!nameInput || !emailInput || !registrationInput || !passwordInput) {
-        mostrarToast("Preencha todos os campos!");
+        window.mostrarToast("Preencha todos os campos obrigatórios!");
         return;
     }
 
-    // Payload compatível com RegisterDTO / backend Spring Boot
+    // Payload compatível com o RegisterDTO do backend Spring Boot
     const payload = {
-        registration: registrationInput,
-        name: nameInput,
-        email: emailInput,
+        registration: registrationInput.trim(),
+        name: nameInput.trim(),
+        email: emailInput.trim(),
         password: passwordInput,
-        permission: "TECHNICIAN" // Mantido em maiúsculo por padrão de Enums no Java
+        permission: "TECHNICIAN" // Mantido em maiúsculo pelo padrão do Enum no Java
     };
 
     try {
@@ -29,78 +36,75 @@ window.cadastrarUsuario = async function () {
             // Sucesso: Troca os modais visuais
             const popupConf = document.getElementById('popupConfirmacao');
             const popupSuc = document.getElementById('popupSucesso');
+
             if (popupConf) popupConf.style.display = 'none';
-            if (popupSuc) popupSuc.style.display = 'flex';
+            if (popupSuc) {
+                popupSuc.style.display = 'flex';
+            } else {
+                window.mostrarToast("Usuário cadastrado com sucesso!", "toast-aviso1");
+            }
 
-            // Limpa os campos após sucesso
-            ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
-                const field = document.getElementById(id);
-                if (field) field.value = "";
-            });
-
+            limparFormularioUsuario();
         } else if (response) {
-            const errorMsg = await response.text();
-            mostrarToast("Erro ao cadastrar: " + errorMsg);
+            // Tenta extrair a mensagem de erro formatada do Spring Boot
+            const erro = await response.json().catch(() => ({}));
+            const mensagemErro = erro.error || erro.message || "Verifique os dados informados.";
+            window.mostrarToast("Erro ao cadastrar: " + mensagemErro);
         }
     } catch (error) {
-        console.error("Connection error:", error);
-        mostrarToast("Erro de conexão com o servidor.");
+        console.error("Erro na requisição de cadastro:", error);
+        window.mostrarToast("Falha de conexão com o servidor.");
     }
 };
 
-// Gerenciamento de Eventos e Popups após o carregamento da página
+// ===================================================================
+// 2. FUNÇÕES AUXILIARES DE UI
+// ===================================================================
+function limparFormularioUsuario() {
+    ["cadNome", "cadEmail", "cadMatricula", "cadSenha"].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.value = "";
+    });
+}
+
+// ===================================================================
+// 3. INICIALIZAÇÃO DE EVENTOS DOM (Popups e Botões)
+// ===================================================================
 document.addEventListener("DOMContentLoaded", () => {
     const popupConfirmacao = document.getElementById('popupConfirmacao');
     const popupSucesso = document.getElementById('popupSucesso');
-    const btncadastrar = document.getElementById('btncadastrar');
-    const btnCancelar = document.getElementById('btn-cancelar-confirmacao');
+
+    const btnCadastrar = document.getElementById('btncadastrar');
+    const btnCancelarConf = document.getElementById('btn-cancelar-confirmacao');
     const btnConfirmarFinal = document.getElementById('btn-confirmar-final');
     const btnFecharSucesso = document.getElementById('btn-fechar-sucesso');
 
-    // 1. Abre a tela de confirmação
-    if (btncadastrar) {
-        btncadastrar.addEventListener('click', () => {
-            if (popupConfirmacao) popupConfirmacao.style.display = 'flex';
+    // Abre a tela de confirmação antes de salvar
+    if (btnCadastrar && popupConfirmacao) {
+        btnCadastrar.addEventListener('click', () => {
+            popupConfirmacao.style.display = 'flex';
         });
     }
 
-    // 2. Cancela a ação
-    if (btnCancelar) {
-        btnCancelar.addEventListener('click', () => {
-            if (popupConfirmacao) popupConfirmacao.style.display = 'none';
+    // Cancela a ação e fecha o modal
+    if (btnCancelarConf && popupConfirmacao) {
+        btnCancelarConf.addEventListener('click', () => {
+            popupConfirmacao.style.display = 'none';
         });
     }
 
-    // 3. Confirma a ação e dispara a API
+    // Confirma a ação e dispara a requisição para a API
     if (btnConfirmarFinal) {
-        btnConfirmarFinal.onclick = (e) => {
-            e.preventDefault(); // Bloqueia o refresh da página (essencial)
-            cadastrarUsuario(); // CHAMA A API AQUI
-        };
+        btnConfirmarFinal.addEventListener('click', (e) => {
+            e.preventDefault(); // Bloqueia o refresh da página (essencial em formulários)
+            window.cadastrarUsuario();
+        });
     }
 
-    // 4. Fechar o popup de sucesso final
-    if (btnFecharSucesso) {
+    // Fecha o popup de sucesso final
+    if (btnFecharSucesso && popupSucesso) {
         btnFecharSucesso.addEventListener('click', () => {
-            if (popupSucesso) popupSucesso.style.display = 'none';
+            popupSucesso.style.display = 'none';
         });
     }
 });
-
-// Função para mostrar o Toast com Fallback
-window.mostrarToast = function (mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    } else {
-        alert(mensagem); // Fallback caso o HTML não possua a div do Toast
-    }
-};

@@ -1,16 +1,22 @@
 /**
  * js/ui.js
- * Interface, Modais, Sidebar e Controle de Acesso
+ * Responsável por: Controle de Acesso, Manipulação de Sidebars, Fechamento de Modais e Eventos Globais.
  */
 
-// ESCUTA GLOBAL DA TECLA ENTER
+// ===================================================================
+// 1. ESCUTADORES GLOBAIS DE TECLADO (Ações via Enter)
+// ===================================================================
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         const focusedElement = document.activeElement;
+
+        // Tela de Login
         if (focusedElement.id === 'matricula' || focusedElement.id === 'senha') {
             event.preventDefault();
             if (typeof btnindex === "function") btnindex();
         }
+
+        // Tela Inicial (Check-in)
         if (focusedElement.id === 'quilometragem-inicial' || focusedElement.id === 'observacoes') {
             event.preventDefault();
             if (typeof salvarVeiculoInfo === "function") salvarVeiculoInfo();
@@ -18,54 +24,52 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-// CARREGAMENTO INICIAL, SIDEBAR E TRAVA DE SEGURANÇA POR PERFIL
+// ===================================================================
+// 2. INICIALIZAÇÃO DA PÁGINA (Controle de Acesso e Setup)
+// ===================================================================
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- CONTROLE DE ACESSO POR PERFIL ---
     const rawPermission = localStorage.getItem("userPermission") || "";
     const permission = rawPermission.trim().toUpperCase();
     const currentPage = window.location.pathname;
 
     const gestorPages = [
-        "telainicial-gestor.html",
-        "relatorios.html",
-        "configuracoes-gestor.html",
-        "cadastrousuarios.html",
-        "cadastroveiculos.html",
-        "historicochamados.html"
+        "telainicial-gestor.html", "relatorios.html", "configuracoes-gestor.html",
+        "cadastrousuarios.html", "cadastroveiculos.html", "historicochamados.html"
     ];
 
     const technicianPages = [
-        "telainicial.html",
-        "chamados.html",
-        "configuracoes-tecnico.html"
+        "telainicial.html", "chamados.html", "configuracoes-tecnico.html"
     ];
 
-    // Trava de segurança por perfil
     if (permission) {
-        // Usando endsWith para evitar conflito entre chamados.html e historicochamados.html
         const isGestorPage = gestorPages.some(page => currentPage.endsWith(page));
         const isTechnicianPage = technicianPages.some(page => currentPage.endsWith(page));
 
+        // Se for página de gestor, e ele NÃO FOR gestor -> volta pro inicio do técnico
         if (isGestorPage && permission !== "ADMINISTRATOR" && permission !== "ROLE_ADMINISTRATOR") {
             window.location.href = "telainicial.html";
             return;
         }
 
-        // Técnico só acessa tela de técnico, mas o ADMINISTRATOR tem passe livre em todas
+        // Se for página de técnico, e ele NÃO FOR nem técnico nem gestor -> vai pro inicio do gestor
         if (isTechnicianPage && permission !== "TECHNICIAN" && permission !== "ADMINISTRATOR" && permission !== "ROLE_ADMINISTRATOR") {
             window.location.href = "telainicial-gestor.html";
             return;
         }
     }
 
-    // Só chama a função se ela existir na página atual
+    // --- CARREGAMENTO DE DADOS VISUAIS DA TELA ---
     if (typeof carregarDadosTelaInicial === "function") {
         carregarDadosTelaInicial();
     }
 
-    // Configuração da Sidebar
+    // --- CONFIGURAÇÃO DA SIDEBAR ---
     const btnMenu = document.getElementById("btnmenu");
     const sidebar = document.getElementById("sidebar");
     const overlaySidebar = document.getElementById("overlayBlurSidebar");
+    const btnClose = document.getElementById("btnx");
 
     const closeSidebar = () => {
         if (sidebar) sidebar.style.width = "0";
@@ -79,10 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    const btnClose = document.getElementById("btnx");
     if (btnClose) btnClose.onclick = closeSidebar;
     if (overlaySidebar) overlaySidebar.onclick = closeSidebar;
 
+    // Fecha todos os modais ao clicar no overlay escuro de fundo
     document.querySelectorAll(".sobreposicao").forEach(overlay => {
         overlay.addEventListener("click", event => {
             if (event.target === overlay) {
@@ -91,122 +95,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --------------------------------------------------------
-    // LÓGICA DO POPUP DE ABASTECIMENTO
-    // --------------------------------------------------------
-    window.abrirPopupAbastecimento = () => {
-        const popup = document.getElementById("popupAbastecimento");
-        if (popup) popup.style.display = "flex";
-    };
-
+    // --- CONFIGURAÇÃO DE FLUXO DOS POPUPS DE ABASTECIMENTO ---
     const popupAbs = document.getElementById('popupAbastecimento');
-    const popupConf = document.getElementById('popupConfirmacao');
-    const popupSuc = document.getElementById('popupSucesso');
-    const btnSalvarAbs = document.getElementById('btn-salvar-abastecimento');
-    const btnVoltar = document.getElementById("btn-voltar");
-    const btnCancelaConf = document.getElementById('btn-cancelar-confirmacao');
-    const btnConfirmaFin = document.getElementById('btn-confirmar-final');
-    const btnFechaSuc = document.getElementById('btn-fechar-sucesso');
+    const popupConf = document.getElementById('popupConfirmacaoAbs') || document.getElementById('popupConfirmacao');
 
-    // Botão Voltar (do formulário)
-    if (btnVoltar) {
-        btnVoltar.onclick = () => popupAbs.style.display = "none";
+    const btnSalvarAbs = document.getElementById('btn-salvar-abastecimento');
+    const btnVoltarAbs = document.querySelector('#popupAbastecimento .btn-voltar');
+    const btnCancelaConf = document.querySelector('#popupConfirmacaoAbs .btn-voltar') || document.querySelector('#popupConfirmacao .btn-voltar');
+
+    // Botão Voltar (sai do formulário)
+    if (btnVoltarAbs && popupAbs) {
+        btnVoltarAbs.onclick = () => popupAbs.style.display = "none";
     }
 
-    // Botão Salvar (Valida e abre Confirmação)
-    if (btnSalvarAbs) {
+    // Botão Salvar do Abastecimento: Valida e abre tela de confirmação (a API em si é disparada no service.js)
+    if (btnSalvarAbs && popupAbs && popupConf) {
         btnSalvarAbs.onclick = () => {
-            const camposIds = ['litros-abastecimento', 'preco-litro', 'km-veiculo', 'nf-abastecimento', 'data-abastecimento', 'hora-abastecimento', 'troca-oleo'];
+            const camposIds = ['litros-abastecimento', 'preco-litro', 'data-abastecimento', 'hora-abastecimento'];
             let algumVazio = false;
 
             camposIds.forEach(id => {
                 const input = document.getElementById(id);
-                if (!input || input.value.trim() === "") {
-                    if (input) input.style.borderColor = "red";
-                    algumVazio = true;
-                } else {
-                    if (input) input.style.borderColor = "#252020";
+                if (input) {
+                    if (input.value.trim() === "") {
+                        input.style.borderColor = "red";
+                        algumVazio = true;
+                    } else {
+                        input.style.borderColor = "#252020";
+                    }
                 }
             });
 
             if (algumVazio) {
-                mostrarToast("Preencha todos os campos!");
-                return; // PARA AQUI se estiver vazio
+                window.mostrarToast("Preencha todos os campos obrigatórios!");
+                return;
             }
 
-            // Se estiver tudo ok, troca de popup
+            // Tudo validado, esconde form e mostra confirmação
             popupAbs.style.display = 'none';
             popupConf.style.display = 'flex';
         };
     }
 
-    // Botão Cancelar (na confirmação)
-    if (btnCancelaConf) {
+    // Botão Cancelar (dentro da tela de confirmação)
+    if (btnCancelaConf && popupAbs && popupConf) {
         btnCancelaConf.onclick = () => {
             popupConf.style.display = 'none';
-            popupAbs.style.display = 'flex';
-        };
-    }
-
-    // Botão Confirmar Final (Envia e mostra Sucesso)
-    if (btnConfirmaFin) {
-        btnConfirmaFin.onclick = async () => {
-            const serviceId = localStorage.getItem("activeServiceId");
-            const litros = document.getElementById("litros-abastecimento")?.value;
-            const data = document.getElementById("data-abastecimento")?.value;
-            const hora = document.getElementById("hora-abastecimento")?.value;
-
-            if (!serviceId) {
-                mostrarToast("Nenhum serviço ativo.");
-                return;
-            }
-
-            try {
-                // Usa apiFetch se disponível, senão usa fetch padrão
-                const fetchFn = typeof apiFetch !== "undefined" ? apiFetch : fetch;
-                const url = typeof apiFetch !== "undefined" ? `/service/${serviceId}/fuel` : `http://localhost:8080/service/${serviceId}/fuel`;
-
-                const response = await fetchFn(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        amount: parseFloat(litros),
-                        date: data,
-                        time: hora
-                    })
-                });
-
-                if (response && response.ok) {
-                    mostrarToast1("Abastecimento registrado!");
-                    if (popupAbs) popupAbs.style.display = "none";
-                    if (popupConf) popupConf.style.display = 'none';
-                    if (popupSuc) popupSuc.style.display = 'flex';
-                } else {
-                    mostrarToast("Erro ao salvar abastecimento.");
-                }
-            } catch (error) {
-                console.error("Erro na API:", error);
-                mostrarToast("Erro de conexão.");
-            }
-        };
-    }
-
-    // Botão Fechar Sucesso
-    if (btnFechaSuc) {
-        btnFechaSuc.onclick = () => {
-            if (popupSuc) popupSuc.style.display = 'none';
+            popupAbs.style.display = 'flex'; // Volta para o form sem perder os dados
         };
     }
 });
 
-// MODAIS GERAIS
-window.abrirModalConfirmacao = () => {
-    const modal = document.getElementById("modalConfirmacao");
-    if (modal) modal.style.display = "flex";
-};
+// ===================================================================
+// 3. FUNÇÕES GLOBAIS DE MANIPULAÇÃO DE UI (EXPOSTAS NO WINDOW)
+// ===================================================================
 
 window.fecharTodosModais = () => {
-    ["modalConfirmacao", "modalDetalhesVeiculo", "popupAbastecimento", "modalAvisoCheckout"].forEach(id => {
+    ["modalConfirmacao", "modalDetalhesVeiculo", "popupAbastecimento", "popupConfirmacaoAbs", "modalAvisoCheckout"].forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = "none";
     });
@@ -217,75 +162,76 @@ window.fecharTodosModais = () => {
     if (overlaySidebar) overlaySidebar.classList.remove("active");
 };
 
-// CARREGAR DADOS TELA INICIAL (NOME E VEICULO)
-window.carregarDadosTelaInicial = function () {
+// ===================================================================
+// VERIFICA SERVIÇO NO BANCO E MONTA A TELA (Check-in vs Check-out)
+// ===================================================================
+window.carregarDadosTelaInicial = async function () {
     const userName = localStorage.getItem('userName');
-
-    if (userName) {
-        const technGreeting = document.getElementById('boas-vindas-titulo');
-        const mangGreeting = document.getElementById('nome-usuario-logado');
-        if (technGreeting) technGreeting.textContent = `Bem vindo, ${userName}!`;
-        if (mangGreeting) mangGreeting.textContent = userName;
+    if (userName && document.getElementById('boas-vindas-titulo')) {
+        document.getElementById('boas-vindas-titulo').textContent = `Bem vindo, ${userName}!`;
     }
 
-    const vehicleData = localStorage.getItem("selectedVehicle");
     const postCheckin = document.getElementById("secao-pos-checkin");
     const infoDados = document.getElementById("info-veiculo-dados");
     const btnCheckin = document.getElementById("container-checkin-botao");
 
-    // SE NÃO HOUVER VEÍCULO NO STORAGE
-    if (!vehicleData || vehicleData === "null") {
-        if (btnCheckin) btnCheckin.style.setProperty('display', 'block', 'important');
-        if (infoDados) infoDados.style.setProperty('display', 'none', 'important');
-        if (postCheckin) postCheckin.style.setProperty('display', 'none', 'important');
-        return;
-    }
-
-    // SE HOUVER VEÍCULO NO STORAGE
     try {
-        const vehicle = JSON.parse(vehicleData);
-        if (btnCheckin) btnCheckin.style.setProperty('display', 'none', 'important');
-        if (infoDados) infoDados.style.setProperty('display', 'block', 'important');
-        if (postCheckin) postCheckin.style.setProperty('display', 'block', 'important');
+        const response = await apiFetch("/service/active");
+        if (!response) return;
 
-        if (document.getElementById("display-modelo")) document.getElementById("display-modelo").textContent = vehicle.model;
-        if (document.getElementById("display-placa")) document.getElementById("display-placa").textContent = vehicle.licensePlate;
-        if (document.getElementById("display-prefixo")) document.getElementById("display-prefixo").textContent = vehicle.prefix;
+        if (response.ok) {
+            const data = await response.json();
 
-        const kmInput = document.getElementById("quilometragem-inicial");
-        const obsInput = document.getElementById("observacoes");
-        if (kmInput) kmInput.value = localStorage.getItem("km") || "";
-        if (obsInput) obsInput.value = localStorage.getItem("obs") || "";
-    } catch (e) {
-        localStorage.removeItem("selectedVehicle");
-    }
-};
+            if (data.active) {
+                // Persiste dados no storage para uso nas outras funções do service.js
+                localStorage.setItem("activeServiceId", data.serviceId);
+                localStorage.setItem("km", data.departureKm);
+                localStorage.setItem("obs", data.description);
 
-// FUNÇÕES PARA MOSTRAR TOASTS
-window.mostrarToast = function (mensagem) {
-    const toast = document.getElementById("toast-aviso");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden");
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
-    }
-};
+                // Mostra/Esconde elementos da UI
+                if (btnCheckin) btnCheckin.style.display = 'none';
+                if (infoDados) infoDados.style.display = 'block';
+                if (postCheckin) postCheckin.style.display = 'block';
 
-window.mostrarToast1 = function (mensagem) {
-    const toast = document.getElementById("toast-aviso1");
-    if (toast) {
-        toast.innerText = mensagem;
-        toast.style.display = "block";
-        toast.classList.remove("toast-hidden1");
-        // Esconde após 3 segundos
-        setTimeout(() => {
-            toast.classList.add("toast-hidden1");
-            setTimeout(() => { toast.style.display = "none"; }, 500);
-        }, 3000);
+                // Preenche dados do veículo
+                document.getElementById("display-modelo").textContent = data.model;
+                document.getElementById("display-placa").textContent = data.licensePlate;
+                document.getElementById("display-prefixo").textContent = data.carPrefix;
+
+                // Preenche KM e Observações
+                if (document.getElementById("quilometragem-inicial"))
+                    document.getElementById("quilometragem-inicial").value = data.departureKm;
+                if (document.getElementById("observacoes"))
+                    document.getElementById("observacoes").value = data.description;
+
+                // ============================================================
+                // CORREÇÃO DA DATA E HORÁRIO (Conversão de ISO para Input)
+                // ============================================================
+                if (data.departureTime) {
+                    const dt = new Date(data.departureTime);
+
+                    // Formata para YYYY-MM-DD
+                    const dataFormatada = dt.toISOString().split('T')[0];
+                    // Formata para HH:MM
+                    const horaFormatada = dt.toTimeString().split(' ')[0].substring(0, 5);
+
+                    if (document.getElementById("data-inicial"))
+                        document.getElementById("data-inicial").value = dataFormatada;
+                    if (document.getElementById("horario-inicial"))
+                        document.getElementById("horario-inicial").value = horaFormatada;
+                }
+
+                // Transforma a tela para modo Checkout/Abastecimento
+                if (typeof transicaoPosCheckin === "function") transicaoPosCheckin();
+
+            } else {
+                // Se não há serviço ativo, garante que a tela está limpa
+                if (btnCheckin) btnCheckin.style.display = 'block';
+                if (infoDados) infoDados.style.display = 'none';
+                if (postCheckin) postCheckin.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error("Falha ao carregar dados iniciais:", error);
     }
 };

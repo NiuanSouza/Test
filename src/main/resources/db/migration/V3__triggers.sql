@@ -2,7 +2,7 @@ DELIMITER $$
 
 DROP TRIGGER IF EXISTS trg_validate_car_availability$$
 CREATE TRIGGER trg_validate_car_availability
-BEFORE INSERT ON attendance
+BEFORE INSERT ON service
 FOR EACH ROW
 BEGIN
     DECLARE current_status VARCHAR(20);
@@ -23,7 +23,7 @@ BEGIN
     DECLARE v_car_prefix VARCHAR(20);
     DECLARE v_current_obs TEXT;
     
-    SELECT car_prefix INTO v_car_prefix FROM attendance WHERE id = NEW.service_id;
+    SELECT car_prefix INTO v_car_prefix FROM service WHERE id = NEW.service_id;
     
     SELECT next_oil_change_km, observations INTO v_oil_km, v_current_obs FROM cars WHERE prefix = v_car_prefix;
     
@@ -38,30 +38,6 @@ BEGIN
         ELSE 
             UPDATE cars SET vehicle_status = 'MAINTENANCE' WHERE prefix = v_car_prefix;
         END IF;
-    END IF;
-END$$
-
-DROP TRIGGER IF EXISTS trg_start_service_status$$
-CREATE TRIGGER trg_start_service_status
-AFTER INSERT ON attendance
-FOR EACH ROW
-BEGIN
-    UPDATE cars SET vehicle_status = 'IN_USE' WHERE prefix = NEW.car_prefix;
-END$$
-
-DROP TRIGGER IF EXISTS trg_clear_use_after_cancellation$$
-CREATE TRIGGER trg_clear_use_after_cancellation
-AFTER INSERT ON incidents
-FOR EACH ROW
-BEGIN
-    DECLARE v_car_prefix VARCHAR(20);
-
-    IF NEW.incident_type = 'CANCELLATION' THEN
-        SELECT car_prefix INTO v_car_prefix FROM attendance WHERE id = NEW.service_id;
-        
-        UPDATE cars SET vehicle_status = 'AVAILABLE' WHERE prefix = v_car_prefix;
-        
-        UPDATE attendance SET completion_time = CURRENT_TIMESTAMP WHERE id = NEW.service_id AND completion_time IS NULL;
     END IF;
 END$$
 

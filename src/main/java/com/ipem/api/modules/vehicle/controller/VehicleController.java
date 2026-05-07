@@ -1,8 +1,8 @@
 package com.ipem.api.modules.vehicle.controller;
 
 import com.ipem.api.modules.vehicle.dto.CarUpdateDTO;
-import com.ipem.api.modules.vehicle.dto.FuelRequestDTO;
 import com.ipem.api.modules.vehicle.model.Car;
+// import com.ipem.api.modules.vehicle.dto.CarRequestDTO; // Descomente se for usar o DTO
 import com.ipem.api.modules.vehicle.service.VehicleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Controller responsável EXCLUSIVAMENTE pelo gerenciamento da Frota Física (Carros).
+ * Operações de uso/serviço foram transferidas para o ServiceController.
+ */
 @RestController
 @RequestMapping("/vehicle")
 @CrossOrigin(origins = "*")
@@ -21,35 +25,19 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
-    @PatchMapping("/{prefix}/update-data")
-    public ResponseEntity<?> updateData(@PathVariable String prefix, @RequestBody @Valid CarUpdateDTO data) {
+    // ===================================================================================
+    // BUSCAS (GET)
+    // ===================================================================================
+
+    @GetMapping
+    public ResponseEntity<?> listAllCars() {
         try {
-            vehicleService.updateKmAndObs(prefix.trim(), data.mileage(), data.observations());
-            return ResponseEntity.ok(Map.of("message", "Dados do veículo atualizados com sucesso!"));
+            return ResponseEntity.ok(vehicleService.findAllCars());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerCar(@RequestBody @Valid Car car) {
-        try {
-            var newCar = vehicleService.register(car);
-            return ResponseEntity.ok(Map.of("message", "Veículo cadastrado com sucesso!", "prefix", newCar.getPrefix()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @PostMapping("/{prefix}/fuel")
-    public ResponseEntity<?> registerFuel(@PathVariable String prefix, @RequestBody @Valid FuelRequestDTO data) {
-        try {
-            vehicleService.registerFuel(prefix, data.value(), data.date());
-            return ResponseEntity.ok(Map.of("message", "Abastecimento registrado com sucesso!"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
-    }
     @GetMapping("/types")
     public ResponseEntity<?> listCarTypes() {
         try {
@@ -59,15 +47,29 @@ public class VehicleController {
         }
     }
 
-    @GetMapping("/service/current")
-    public ResponseEntity<?> getCurrentService() {
-        return ResponseEntity.ok(vehicleService.getCurrentService());
+    // ===================================================================================
+    // CADASTROS E ATUALIZAÇÕES (POST / PATCH)
+    // ===================================================================================
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerCar(@RequestBody @Valid Car car) {
+        // "@RequestBody @Valid CarRequestDTO dto" no futuro para evitar Mass Assignment.
+        try {
+            var newCar = vehicleService.register(car);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Veículo cadastrado com sucesso!",
+                    "prefix", newCar.getPrefix()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @GetMapping
-    public ResponseEntity<?> listAllCars() {
+    @PatchMapping("/{prefix}/update-data")
+    public ResponseEntity<?> updateData(@PathVariable String prefix, @RequestBody @Valid CarUpdateDTO data) {
         try {
-            return ResponseEntity.ok(vehicleService.findAllCars());
+            vehicleService.updateKmAndObs(prefix.trim(), data.mileage(), data.observations());
+            return ResponseEntity.ok(Map.of("message", "Dados do veículo atualizados com sucesso!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

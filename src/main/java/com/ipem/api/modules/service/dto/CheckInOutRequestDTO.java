@@ -8,4 +8,5 @@ public record CheckInOutRequestDTO(
         Float recordKm,
         String note,
         Priority priority
-) {}
+) {
+}
