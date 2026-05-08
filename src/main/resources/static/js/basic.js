@@ -5,7 +5,7 @@
 
 const CONFIG = Object.freeze({
     // Configurações de Ambiente
-    API_URL: "http://localhost:8080",
+    API_URL: window.location.origin,
     TOKEN_KEY: "auth_token",
 
     /** * MODO DESENVOLVEDOR (DEV_MODE)
